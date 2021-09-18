@@ -78,7 +78,6 @@ Shader "Point Cloud/Custom Point"
             #include "Packages/jp.keijiro.noiseshader/Shader/ClassicNoise3D.hlsl"
             #include "Packages/jp.keijiro.noiseshader/Shader/SimplexNoise2D.hlsl"
             #include "Packages/jp.keijiro.noiseshader/Shader/SimplexNoise3D.hlsl"
-            #include "Assets/Material/ColorspaceConversion.hlsl"
 
             struct VertexInput
             {
