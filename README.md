@@ -4,9 +4,12 @@ A little example of the point cloud visualization in Unity using [Pcx](https://g
 
 ![screenshot](preview.jpg)
 
+https://user-images.githubusercontent.com/3608128/133893989-b0aea005-dc4a-405f-8ce5-bcdef23e8969.mp4
+
 ## Requirements
 
-Unity >= 2021.1
+- Unity >= 2021.1
+- good PC, good graphics card
 
 ## How to run
 
