@@ -30,6 +30,10 @@ https://user-images.githubusercontent.com/3608128/133893989-b0aea005-dc4a-405f-8
 - [渋谷地下3Dデータ](https://3dcel.com/opendata/)、©3D City Experience Lab.、[【表示4.0 国際】ライセンス](https://creativecommons.org/licenses/by/4.0/) を改変して作成
 - Created by modifying [Shibuya Underground 3D Data](https://3dcel.com/opendata/)、©3D City Experience Lab.、[Licensed under the CC-BY 4.0](https://creativecommons.org/licenses/by/4.0/)
 
+### Audio data
+
+- `mc002_extended.ogg` is licensed under the [CC0](https://creativecommons.org/publicdomain/zero/1.0/).
+
 ### Source code
 
 - `CustomPcxPoint.shader` uses some code from [BA_PointCloud](https://github.com/SFraissTU/BA_PointCloud) that licensed under the [BSD 2-Clause License](https://github.com/SFraissTU/BA_PointCloud/blob/master/LICENSE). Copyright (c) 2017-2018, Simon Maximilian Fraiss All rights reserved.
