@@ -71,6 +71,10 @@ public class CameraControl : MonoBehaviour
     private void Awake()
     {
         defaultLocRot = LocRot.From(transform);
+
+#if !UNITY_EDITOR
+        Cursor.visible = false;
+#endif
     }
 
     private void Update()
