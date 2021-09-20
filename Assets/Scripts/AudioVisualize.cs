@@ -6,6 +6,7 @@ using UniRx;
 public class AudioVisualize : MonoBehaviour
 {
     public AudioSource audioSource;
+    public CustomPcxPointController customPcxPointController;
     public float freqMin = 0.0f;
     public float freqMax = 1000.0f;
     public float multiply = 1.0f;
@@ -43,6 +44,8 @@ public class AudioVisualize : MonoBehaviour
             ls.y = total * previewScale;
             targetTransform.localScale = ls;
         }
+
+        customPcxPointController.audioSignal.Value = GetValue();
     }
 
     public float GetValue()

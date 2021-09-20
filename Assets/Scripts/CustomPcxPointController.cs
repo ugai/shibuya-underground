@@ -36,6 +36,20 @@ public class CustomPcxPointController : MonoBehaviour
     [RangeReactiveProperty(0.0f, 1.0f)]
     public FloatReactiveProperty gridHueShift = new FloatReactiveProperty(0.0f);
 
+
+    [RangeReactiveProperty(0.0f, 1.0f)]
+    public FloatReactiveProperty audioSignal = new FloatReactiveProperty(0.0f);
+
+    public Vector3ReactiveProperty effectTargetPositionBottom = new Vector3ReactiveProperty(Vector3.zero);
+    public Vector3ReactiveProperty effectTargetPositionLetterH = new Vector3ReactiveProperty(Vector3.zero);
+    public Vector3ReactiveProperty effectTargetPositionLetterE = new Vector3ReactiveProperty(Vector3.zero);
+    public Vector3ReactiveProperty effectTargetPositionLetterN = new Vector3ReactiveProperty(Vector3.zero);
+
+    public Transform effectTargetBottom;
+    public Transform effectTargetLetterH;
+    public Transform effectTargetLetterE;
+    public Transform effectTargetLetterN;
+
     private Material material;
 
     private void Start()
@@ -45,32 +59,69 @@ public class CustomPcxPointController : MonoBehaviour
         material.SetInteger("_ScreenWidth", Screen.width);
         material.SetInteger("_ScreenHeight", Screen.height);
 
-        var pointSizeId = Shader.PropertyToID("_PointSize");
-        pointSize.Subscribe(v => material.SetFloat(pointSizeId, v)).AddTo(this);
+        {
+            var id = Shader.PropertyToID("_PointSize");
+            pointSize.Subscribe(v => material.SetFloat(id, v)).AddTo(this);
+        }
+        {
+            var id = Shader.PropertyToID("_Intensity");
+            intensity.Subscribe(v => material.SetFloat(id, v)).AddTo(this);
+        }
+        {
+            var id = Shader.PropertyToID("_NoiseStrength");
+            noiseStrength.Subscribe(v => material.SetFloat(id, v)).AddTo(this);
+        }
+        {
+            var id = Shader.PropertyToID("_NoiseScale");
+            noiseScale.Subscribe(v => material.SetFloat(id, v)).AddTo(this);
+        }
+        {
+            var id = Shader.PropertyToID("_NoiseSpeed");
+            noiseSpeed.Subscribe(v => material.SetFloat(id, v)).AddTo(this);
+        }
+        {
+            var id = Shader.PropertyToID("_GridStrength");
+            gridStrength.Subscribe(v => material.SetFloat(id, v)).AddTo(this);
+        }
+        {
+            var id = Shader.PropertyToID("_GridScale");
+            gridScale.Subscribe(v => material.SetFloat(id, v)).AddTo(this);
+        }
+        {
+            var id = Shader.PropertyToID("_GridSpeed");
+            gridSpeed.Subscribe(v => material.SetFloat(id, v)).AddTo(this);
+        }
+        {
+            var id = Shader.PropertyToID("_GridHueShift");
+            gridHueShift.Subscribe(v => material.SetFloat(id, v)).AddTo(this);
+        }
+        {
+            var id = Shader.PropertyToID("_AudioSignal");
+            audioSignal.Subscribe(v => material.SetFloat(id, v)).AddTo(this);
+        }
+        {
+            var id = Shader.PropertyToID("_EffectTargetPositionBottom");
+            effectTargetPositionBottom.Subscribe(v => material.SetVector(id, v)).AddTo(this);
+        }
+        {
+            var id = Shader.PropertyToID("_EffectTargetPositionLetterH");
+            effectTargetPositionLetterH.Subscribe(v => material.SetVector(id, v)).AddTo(this);
+        }
+        {
+            var id = Shader.PropertyToID("_EffectTargetPositionLetterE");
+            effectTargetPositionLetterE.Subscribe(v => material.SetVector(id, v)).AddTo(this);
+        }
+        {
+            var id = Shader.PropertyToID("_EffectTargetPositionLetterN");
+            effectTargetPositionLetterN.Subscribe(v => material.SetVector(id, v)).AddTo(this);
+        }
+    }
 
-        var intensityId = Shader.PropertyToID("_Intensity");
-        intensity.Subscribe(v => material.SetFloat(intensityId, v)).AddTo(this);
-
-        var noiseStrengthId = Shader.PropertyToID("_NoiseStrength");
-        noiseStrength.Subscribe(v => material.SetFloat(noiseStrengthId, v)).AddTo(this);
-
-        var noiseScaleId = Shader.PropertyToID("_NoiseScale");
-        noiseScale.Subscribe(v => material.SetFloat(noiseScaleId, v)).AddTo(this);
-
-        var noiseSpeedId = Shader.PropertyToID("_NoiseSpeed");
-        noiseSpeed.Subscribe(v => material.SetFloat(noiseSpeedId, v)).AddTo(this);
-
-        var gridStrengthId = Shader.PropertyToID("_GridStrength");
-        gridStrength.Subscribe(v => material.SetFloat(gridStrengthId, v)).AddTo(this);
-
-        var gridScaleId = Shader.PropertyToID("_GridScale");
-        gridScale.Subscribe(v => material.SetFloat(gridScaleId, v)).AddTo(this);
-
-        var gridSpeedId = Shader.PropertyToID("_GridSpeed");
-        gridSpeed.Subscribe(v => material.SetFloat(gridSpeedId, v)).AddTo(this);
-
-        var gridHueShiftId = Shader.PropertyToID("_GridHueShift");
-        gridHueShift.Subscribe(v => material.SetFloat(gridHueShiftId, v)).AddTo(this);
+    private void Update()
+    {
+        effectTargetPositionBottom.Value = effectTargetBottom.transform.position;
+        effectTargetPositionLetterH.Value = effectTargetLetterH.transform.position;
+        effectTargetPositionLetterE.Value = effectTargetLetterE.transform.position;
+        effectTargetPositionLetterN.Value = effectTargetLetterN.transform.position;
     }
 }
-

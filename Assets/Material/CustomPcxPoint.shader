@@ -40,7 +40,6 @@ Shader "Point Cloud/Custom Point"
 {
     Properties
     {
-        //[HDR] _Tint("Tint", Color) = (0.5, 0.5, 0.5, 1)
         _ScreenWidth("Screen Width", Int) = 0
         _ScreenHeight("Screen Height", Int) = 0
         _PointSize("Point Size", Float) = 5.0
@@ -52,6 +51,11 @@ Shader "Point Cloud/Custom Point"
         _GridScale("Grid Scale", Float) = 1.0
         _GridSpeed("Grid Speed", Float) = 1.0
         _GridHueShift("Grid Hue Shift", Float) = 0.0
+        _AudioSignal("Audio Signal", Float) = 0.0
+        _EffectTargetPositionBottom("Effect Target Position Bottom", Vector) = (0.0, 0.0, 0.0)
+        _EffectTargetPositionLetterH("Effect Target Position Letter H", Vector) = (0.0, 0.0, 0.0)
+        _EffectTargetPositionLetterE("Effect Target Position Letter E", Vector) = (0.0, 0.0, 0.0)
+        _EffectTargetPositionLetterN("Effect Target Position Letter N", Vector) = (0.0, 0.0, 0.0)
     }
     SubShader
     {
@@ -104,7 +108,6 @@ Shader "Point Cloud/Custom Point"
                 UNITY_VERTEX_OUTPUT_STEREO
             };
 
-            //half4 _Tint;
             int _ScreenWidth;
             int _ScreenHeight;
 
@@ -117,6 +120,11 @@ Shader "Point Cloud/Custom Point"
             float _GridScale;
             float _GridSpeed;
             float _GridHueShift;
+            float _AudioSignal;
+            float3 _EffectTargetPositionBottom;
+            float3 _EffectTargetPositionLetterH;
+            float3 _EffectTargetPositionLetterE;
+            float3 _EffectTargetPositionLetterN;
 
             float3 rgb2hsv(float3 c)
             {
@@ -136,6 +144,22 @@ Shader "Point Cloud/Custom Point"
                 return c.z * lerp(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
             }
 
+            void letterGravityBending(float3 letterPos, float3 worldPos, float gridInactive, inout float4 pos, inout half4 col) {
+                const float TargetAreaDist = 2.0;
+                float3 targetDir = normalize(letterPos - worldPos);
+                float targetDist = distance(letterPos, worldPos);
+                float targetDistNorm = (1.0 - saturate(targetDist / TargetAreaDist));
+
+                //pos.yx = targetDir.xz
+                //pos.yzx = targetDir.xyz
+                pos.yzx += targetDistNorm * targetDir.xyz * 0.3 * SimplexNoise(worldPos * 0.3);
+
+                // change target area color
+                //float tdn4 = targetDistNorm * targetDistNorm * targetDistNorm * targetDistNorm;
+                //float3 holeColor = float3(1.0, 2.0 + tdn4 * 200, 2.0 + tdn4 * 300);
+                //col.xyz = lerp(col.rgb, holeColor, targetDistNorm * _Intensity * gridInactive * 0.05);
+            }
+
             VertexMiddle Vertex(VertexInput input)
             {
                 float4 pos = input.position;
@@ -144,18 +168,55 @@ Shader "Point Cloud/Custom Point"
                 float4 worldPos = mul(unity_ObjectToWorld, pos);
                 float worldDist= distance(_WorldSpaceCameraPos, worldPos);
 
-            #ifdef UNITY_COLORSPACE_GAMMA
-                //col *= _Tint.rgb * 2;
-            #else
-                //col.rgb *= LinearToGammaSpace(_Tint.rgb) * 2;
-                //col.rgb = GammaToLinearSpace(col);
-            #endif
+                float3 noisePosA = pos.xyz * _NoiseScale + float3(_Time.y * _NoiseSpeed, 0.0, 0.0);  // large noise
+                float3 noisePosB = pos.xyz * _NoiseScale * 5 + float3(-_Time.y * _NoiseSpeed, 0.0, 0.0); // small noise
 
-                float3 noisePosA = pos.xyz * _NoiseScale + float3(_Time.y * _NoiseSpeed, 0.0, 0.0);
                 pos += SimplexNoiseGrad(noisePosA) * _NoiseStrength * 0.1;
-
-                float3 noisePosB = pos.xyz * _NoiseScale * 5 + float3(-_Time.y * _NoiseSpeed, 0.0, 0.0);
                 pos += SimplexNoiseGrad(noisePosB) * _NoiseStrength * 0.1;
+
+                // tweak color
+                float3 hsv = rgb2hsv(col.rgb);
+                hsv.g *= 3.0; // colorfully
+                hsv.b *= _Intensity;
+
+                // flicker effect
+                float flicker = lerp(0.8, 1.0, SimplexNoise(float2(0.0, _Time.y)));
+                col.rgb = hsv2rgb(hsv) * flicker;
+
+                const float FogDist = 60.0;
+                col.a = col.a * (1.0 - saturate(worldDist / FogDist));
+
+                // gird effect
+                float gridInactive = step(_GridStrength, 0.0);
+                float3 gridColor = _GridStrength * 5.0;
+                gridColor = rgb2hsv(gridColor);
+                gridColor.r += _GridHueShift;
+                gridColor.g = 0.5f;
+                gridColor = hsv2rgb(gridColor);
+
+                col.rgb = lerp(col.rgb, gridColor,
+                    saturate(
+                        step(frac(pos.x * _GridScale), 0.01) +
+                        step(frac(pos.y * _GridScale + _Time.y * _GridSpeed), 0.01)
+                    ) * (1.0 - gridInactive)
+                );
+
+                // add noise to target area
+                {
+                    const float TargetAreaDist = 0.8;
+                    float targetDist = distance(_EffectTargetPositionBottom, worldPos.xyz);
+                    float targetDistNorm = (1.0 - saturate(targetDist / TargetAreaDist));
+                    pos.z += targetDistNorm * 1.5 * _AudioSignal * _AudioSignal * SimplexNoise(noisePosB * 3);
+
+                    // change target area color
+                    float tdn4 = targetDistNorm * targetDistNorm * targetDistNorm * targetDistNorm;
+                    float3 holeColor = float3(1.0, 2.0 + tdn4 * 200, 2.0 + tdn4 * 300);
+                    col.rgb = lerp(col.rgb, holeColor, targetDistNorm * _Intensity * gridInactive);
+                }
+
+                letterGravityBending(_EffectTargetPositionLetterH, worldPos.xyz, gridInactive, pos, col);
+                letterGravityBending(_EffectTargetPositionLetterE, worldPos.xyz, gridInactive, pos, col);
+                letterGravityBending(_EffectTargetPositionLetterN, worldPos.xyz, gridInactive, pos, col);
 
                 VertexMiddle o;
                 
@@ -164,29 +225,7 @@ Shader "Point Cloud/Custom Point"
                 UNITY_TRANSFER_INSTANCE_ID(input, o);     // copy instance id in the appdata input to the v2g o
 
                 o.position = UnityObjectToClipPos(pos);
-
-                float3 hsv = rgb2hsv(col.rgb);
-                hsv.g *= 3.0; // colorfully
-                hsv.b *= _Intensity;
-
-                float flicker = lerp(0.8, 1.0, SimplexNoise(float2(0.0, _Time.y)));
-                o.color.rgb = hsv2rgb(hsv) * flicker;
-
-                float fogDist = 60.0;
-                o.color.a = col.a * (1.0 - saturate(worldDist / fogDist));
-
-                float3 gridColor = _GridStrength * 5.0;
-                gridColor = rgb2hsv(gridColor);
-                gridColor.r += _GridHueShift;
-                gridColor.g = 0.5f;
-                gridColor = hsv2rgb(gridColor);
-
-                o.color.rgb = lerp(o.color.rgb, gridColor,
-                    saturate(
-                        step(frac(pos.x * _GridScale), 0.01) +
-                        step(frac(pos.y * _GridScale + _Time.y * _GridSpeed), 0.01)
-                    ) * (1.0 - step(_GridStrength, 0.0)
-                ));
+                o.color = col;
 
                 return o;
             }

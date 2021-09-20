@@ -21,13 +21,14 @@ Material:
     m_TexEnvs: []
     m_Ints: []
     m_Floats:
+    - _AudioSignal: 1.5180271
     - _Distance: 0
     - _EffectStrength: 0.05
     - _GridHueShift: 0.5
     - _GridScale: 0.5
     - _GridSpeed: 0.2
     - _GridStrength: 0
-    - _Intensity: 1.574351
+    - _Intensity: 0.6610046
     - _NoiseScale: 0.1
     - _NoiseSpeed: 0.4
     - _NoiseStrength: 0
@@ -36,5 +37,11 @@ Material:
     - _ScreenWidth: 1920
     - _Strength: 0.55
     m_Colors:
+    - _EffectPosition: {r: 0, g: 0, b: 0, a: 1}
+    - _EffectTargetPosition: {r: 44.25691, g: 1.1461155, b: 1.802784, a: 0}
+    - _EffectTargetPositionBottom: {r: 42.39606, g: -9.01729, b: 8.493146, a: 0}
+    - _EffectTargetPositionLetterE: {r: 42.35938, g: -6.6344337, b: 8.442674, a: 0}
+    - _EffectTargetPositionLetterH: {r: 42.946484, g: -6.5987687, b: 8.054255, a: 0}
+    - _EffectTargetPositionLetterN: {r: 41.770668, g: -6.5656075, b: 8.828879, a: 0}
     - _Tint: {r: 1.0039216, g: 1.0039216, b: 1.0039216, a: 1}
   m_BuildTextureStacks: []

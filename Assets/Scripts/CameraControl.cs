@@ -9,7 +9,7 @@ public class CameraControl : MonoBehaviour
     public float moveUnitPerSec = 10.0f;
     public float nextViewpointMoveSec = 3.0f;
     public float autoPlayIntervalSec = 3.0f;
-    public CustomPcxPointController customPcxPointHandler;
+    public CustomPcxPointController customPcxPointController;
     public AudioVisualize audioVisualize;
     public PlayableDirector playableDirector;
 
@@ -54,7 +54,10 @@ public class CameraControl : MonoBehaviour
     {
         new LocRot(46.0f, 2.0f, -6.0f, 0.0f, -12.0f, 0.0f),
         new LocRot(35.0f, -2.6f, 5.36f, 0.0f, 0.0f, 0.0f),
+        
         new LocRot(47.0f, -8.0f, 15.0f, 1.5f, -144.0f, 0.0f),
+        //new LocRot(46.5f, -7.9f, 16.0f, 1.6f, -156.0f, 90.0f),
+        
         new LocRot(54.5f, -8.0f, 34.0f, 0.0f, -133.0f, 0.0f),
         new LocRot(38.0f, 33.0f, 22.0f, 90.0f, -90.0f, 15.0f),
 
@@ -79,6 +82,12 @@ public class CameraControl : MonoBehaviour
             return;
         }
 
+        // Toggle perspective/ortho
+        if (Input.GetKeyDown(KeyCode.V))
+        {
+            Camera.main.orthographic = !Camera.main.orthographic;
+        }
+
         // Next viewpoint
         if (Input.GetKeyDown(KeyCode.N))
         {
@@ -87,7 +96,7 @@ public class CameraControl : MonoBehaviour
         }
 
         // Toggle play/pause timeline
-        if (Input.GetKeyDown(KeyCode.T))
+        if (Input.GetKeyDown(KeyCode.P))
         {
             if (playableDirector != null)
             {
@@ -133,12 +142,15 @@ public class CameraControl : MonoBehaviour
 
         bool isHorizontalView = Mathf.Abs(srcRot.eulerAngles.x) <= 45.0f;
 
+        float rot = 3.0f;
         var dstPos = srcPos + transform.right * 0.3f;
         var dstRot = srcRot * (isHorizontalView ?
-            Quaternion.Euler(0.0f, -3.0f, 0.0f) :
-            Quaternion.Euler(0.0f, 0.0f, 3.0f));
+            Quaternion.Euler(0.0f, -rot, 0.0f) :
+            Quaternion.Euler(0.0f, 0.0f, rot));
 
-        var intensityOrig = customPcxPointHandler.intensity.Value;
+        var cameraShakeDir = isHorizontalView ? transform.up : Vector3.up;
+
+        var intensityOrig = customPcxPointController.intensity.Value;
 
         // transition
         float tPerSec = 1.0f / autoPlayIntervalSec;
@@ -148,10 +160,10 @@ public class CameraControl : MonoBehaviour
             var a = audioVisualize.GetValue();
 
             var tSmooth = Mathf.SmoothStep(0.0f, 1.0f, t);
-            transform.localPosition = Vector3.Lerp(srcPos, dstPos, tSmooth) + Vector3.up * a * 0.2f;
+            transform.localPosition = Vector3.Lerp(srcPos, dstPos, tSmooth) + cameraShakeDir * a * 0.2f;
             transform.localRotation = Quaternion.Lerp(srcRot, dstRot, tSmooth);
 
-            customPcxPointHandler.intensity.Value = intensityOrig + a * 0.2f;
+            customPcxPointController.intensity.Value = intensityOrig + a * 0.2f;
             yield return null;
 
             t = Mathf.Clamp01(t + (tPerSec * Time.deltaTime));
@@ -160,7 +172,7 @@ public class CameraControl : MonoBehaviour
         transform.localPosition = dstPos;
         transform.localRotation = dstRot;
 
-        customPcxPointHandler.intensity.Value = intensityOrig;
+        customPcxPointController.intensity.Value = intensityOrig;
     }
 
     public void NextViewPoint()
@@ -186,10 +198,10 @@ public class CameraControl : MonoBehaviour
         var dstRot = Quaternion.Euler(dst.rot);
 
         // shader params
-        var pointSizeOrig = customPcxPointHandler.pointSize.Value;
-        var intensityOrig = customPcxPointHandler.intensity.Value;
-        var noiseStrengthOrig = customPcxPointHandler.noiseStrength.Value;
-        var gridStrengthOrig = customPcxPointHandler.gridStrength.Value;
+        var pointSizeOrig = customPcxPointController.pointSize.Value;
+        var intensityOrig = customPcxPointController.intensity.Value;
+        var noiseStrengthOrig = customPcxPointController.noiseStrength.Value;
+        var gridStrengthOrig = customPcxPointController.gridStrength.Value;
 
         // transition
         float tPerSec = 1.0f / nextViewpointMoveSec;
@@ -199,7 +211,7 @@ public class CameraControl : MonoBehaviour
             var a = audioVisualize.GetValue();
 
             var tSmooth = Mathf.SmoothStep(0.0f, 1.0f, t);
-            transform.localPosition = Vector3.Lerp(srcPos, dstPos, tSmooth) + Vector3.up * a * 0.2f;
+            transform.localPosition = Vector3.Lerp(srcPos, dstPos, tSmooth) + transform.up * a * 0.2f;
             transform.localRotation = Quaternion.Lerp(srcRot, dstRot, tSmooth);
 
             var x = (t - 0.5f) * 2.0f; // [-1.0, 1.0]
@@ -207,10 +219,10 @@ public class CameraControl : MonoBehaviour
             var p = Mathf.Clamp01(v * 4.0f);
             const float delay = 0.2f;
             var pDelay = Mathf.Clamp01((v - delay) / delay);
-            customPcxPointHandler.pointSize.Value = pointSizeOrig - p * (pointSizeOrig - 0.6f);
-            customPcxPointHandler.intensity.Value = intensityOrig - p * (intensityOrig - 0.2f);
-            customPcxPointHandler.noiseStrength.Value = (a * a * a * a) * (v * v * tSmooth) * 3.0f;
-            customPcxPointHandler.gridStrength.Value = (pDelay > 0.0f ? Mathf.Max(5.0f, pDelay * 30.0f) : 0.0f);
+            customPcxPointController.pointSize.Value = pointSizeOrig - p * (pointSizeOrig - 0.6f);
+            customPcxPointController.intensity.Value = intensityOrig - p * (intensityOrig - 0.2f);
+            customPcxPointController.noiseStrength.Value = (a * a * a * a) * (v * v * tSmooth) * 3.0f;
+            customPcxPointController.gridStrength.Value = (pDelay > 0.0f ? Mathf.Max(5.0f, pDelay * 30.0f) : 0.0f);
             yield return null;
 
             t = Mathf.Clamp01(t + (tPerSec * Time.deltaTime));
@@ -220,10 +232,10 @@ public class CameraControl : MonoBehaviour
         transform.localRotation = dstRot;
 
         // restore shader params
-        customPcxPointHandler.pointSize.Value = pointSizeOrig;
-        customPcxPointHandler.intensity.Value = intensityOrig;
-        customPcxPointHandler.noiseStrength.Value = noiseStrengthOrig;
-        customPcxPointHandler.gridStrength.Value = gridStrengthOrig;
+        customPcxPointController.pointSize.Value = pointSizeOrig;
+        customPcxPointController.intensity.Value = intensityOrig;
+        customPcxPointController.noiseStrength.Value = noiseStrengthOrig;
+        customPcxPointController.gridStrength.Value = gridStrengthOrig;
     }
 
     private void RotationUpdate()
